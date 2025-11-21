@@ -16,7 +16,7 @@ A short 1–2 page report (`report.pdf`) with comments and a description of the 
 
 ## 1. Project structure
 
-Inside the `MSENSIS-MLE task` (or `vitcatsanddogs`) folder:
+Inside the `MSENSIS-MLE-task` folder:
 
 - `main.py` – main training + inference + FastAPI app  
 - `test.py` – script to check for missing/corrupt images  
@@ -25,12 +25,15 @@ Inside the `MSENSIS-MLE task` (or `vitcatsanddogs`) folder:
 - `README.md` – this file  
 - `report.pdf` – short report (1–2 pages)  
 - `models/`  
-  - `cats_dogs_vit.pt` – fine-tuned model weights (created after training)  
+  - `cats_dogs_vit.pt` – fine-tuned model weights  
+    - **Not stored in the public repo** because of GitHub file size limits.  
+    - Created locally after training, or can be provided separately and placed here.  
 - `dataset/`  
-  - `images/` – all cat/dog images (provided dataset)  
+  - `images/` – all cat/dog images (provided dataset, not committed to git)  
   - `labels.csv` – CSV with image names and labels  
 
-Note: the file `models/cats_dogs_vit.pt` is created after running training once.
+> **Folder placement:**  
+> The `dataset/` and `models/` folders should live in the **same folder as `main.py`** (i.e. `MSENSIS-MLE-task/dataset` and `MSENSIS-MLE-task/models`).
 
 ---
 
@@ -38,8 +41,16 @@ Note: the file `models/cats_dogs_vit.pt` is created after running training once.
 
 The code expects the dataset in this layout, relative to `main.py`:
 
-- `dataset/images/` with files like `0.jpg`, `1.jpg`, …  
-- `dataset/labels.csv`
+```text
+MSENSIS-MLE-task/
+├─ main.py
+├─ dataset/
+│  ├─ images/
+│  │  ├─ 0.jpg
+│  │  ├─ 1.jpg
+│  │  └─ ...
+│  └─ labels.csv
+```
 
 The `labels.csv` file must contain at least the following columns:
 
@@ -63,18 +74,34 @@ If needed, missing or corrupted images can be detected with `test.py` and remove
 
 ### 3.1. Clone the repository
 
-- `git clone <your-repo-url>.git`  
-- `cd "MSENSIS-MLE task"` (or `cd vitcatsanddogs`)
+```bash
+git clone <your-repo-url>.git
+cd MSENSIS-MLE-task
+```
 
 ### 3.2. Create and activate a virtual environment
 
-- Create: `python -m venv venv`  
-- Activate on Windows PowerShell: `.env\Scripts\Activate.ps1`  
-- Activate on Linux/macOS: `source venv/bin/activate`
+```bash
+python -m venv venv
+```
+
+- Activate on **Windows PowerShell**:
+
+  ```bash
+  .\venv\Scripts\Activate.ps1
+  ```
+
+- Activate on **Linux/macOS**:
+
+  ```bash
+  source venv/bin/activate
+  ```
 
 ### 3.3. Install dependencies
 
-- `pip install -r requirements.txt`
+```bash
+pip install -r requirements.txt
+```
 
 This installs:
 
@@ -94,9 +121,9 @@ If you are not sure that all images are present and readable, you can:
 
 ### 4.1. Check for missing / corrupt images
 
-Run:
-
-- `python test.py`
+```bash
+python test.py
+```
 
 This script will:
 
@@ -107,9 +134,9 @@ This script will:
 
 ### 4.2. Clean `labels.csv` automatically
 
-Run:
-
-- `python clean_labels.py`
+```bash
+python clean_labels.py
+```
 
 This will:
 
@@ -129,7 +156,9 @@ After cleaning, `python test.py` should report:
 
 To fine-tune the ViT model on the cats/dogs dataset, run:
 
-- `python main.py --train`
+```bash
+python main.py --train
+```
 
 What happens:
 
@@ -142,15 +171,50 @@ What happens:
 - Training and validation loss/accuracy are shown with tqdm progress bars.  
 - The best model (by validation accuracy) is saved to `models/cats_dogs_vit.pt`.
 
+If the `models/` directory does not exist, you can create it manually before training:
+
+```bash
+mkdir models
+```
+
+The training script will then write `cats_dogs_vit.pt` into that folder.
+
+### 5.1. Using a provided fine-tuned checkpoint (optional)
+
+Because of GitHub’s file size limits, `models/cats_dogs_vit.pt` is **not stored in the public repository**.  
+If you receive this file separately (e.g. from the author):
+
+1. Make sure you have a `models/` folder next to `main.py`.  
+2. Place the file as:
+
+```text
+MSENSIS-MLE-task/
+├─ main.py
+├─ models/
+│  └─ cats_dogs_vit.pt
+```
+
+3. You can then skip the training step and go directly to running the API (next section).
+
+If the file is missing, everything still works; the code will simply use the base pretrained ViT (with lower accuracy).
+
 ---
 
 ## 6. Running the API and Web UI
 
-After training (or even before, if you just want to test with the base pretrained model), you can start the FastAPI app:
+After training (or after placing a provided `cats_dogs_vit.pt` in `models/`), start the FastAPI app:
 
-- `python main.py`
+```bash
+python main.py
+```
 
 By default it starts on `http://0.0.0.0:8000`.
+
+At startup, `main.py`:
+
+- Loads the ViT architecture  
+- Tries to load `models/cats_dogs_vit.pt` if it exists  
+- Otherwise falls back to the base pretrained ViT weights  
 
 ### 6.1. Web UI
 
@@ -181,9 +245,6 @@ Endpoints:
     - `predicted_label` – `"cat"` or `"dog"`  
     - `confidence` – probability in `[0, 1]`  
 
-When `main.py` starts, it tries to load `models/cats_dogs_vit.pt`.  
-If the file is present, the API uses the fine-tuned model; otherwise it falls back to the base pretrained ViT weights.
-
 ---
 
 ## 7. Model details
@@ -201,14 +262,17 @@ If the file is present, the API uses the fine-tuned model; otherwise it falls ba
 
 ## 8. How to run everything from scratch
 
-1. Clone the repo and `cd` into the `MSENSIS-MLE task` folder  
+1. Clone the repo and `cd` into the `MSENSIS-MLE-task` folder  
 2. Create and activate a virtual environment  
 3. Install dependencies with `pip install -r requirements.txt`  
-4. Place the dataset under `dataset/` (`images/` + `labels.csv`)  
-5. (Optional) Run `python test.py` and `python clean_labels.py` to clean the dataset  
-6. Train the model with `python main.py --train`  
-7. Start the API/Web UI with `python main.py`  
-8. Open `http://localhost:8000/` and upload a cat/dog image  
+4. Extract the provided dataset:
+   - Place all images under `dataset/images/`
+   - Place the CSV as `dataset/labels.csv`  
+5. (Optional) Run `python test.py` and `python clean_labels.py` to clean the dataset (some images may be corrupt and crash the loader if not removed)  
+6. Train the model with `python main.py --train` (creates `models/cats_dogs_vit.pt`)  
+7. Or, if you already have `cats_dogs_vit.pt`, create `models/` and copy it there, then skip step 6  
+8. Start the API/Web UI with `python main.py`  
+9. Open `http://localhost:8000/` and upload a cat/dog image  
 
 ---
 
@@ -220,4 +284,3 @@ A short report (`report.pdf`) is included in this folder. It briefly describes:
 - how the dataset is cleaned and preprocessed (Pandas + NumPy)  
 - the training procedure and metrics  
 - how the FastAPI endpoints and Web UI are used to serve the model  
-- limitations and potential future improvements (more epochs, early stopping, pseudo-labeling, etc.)  
